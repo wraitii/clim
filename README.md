@@ -1,3 +1,5 @@
+> Note: this project has been entirely vibe coded, and I have not double-checked the code.
+
 # How Much Does AC Heat Up Cities?
 
 This is a TypeScript energy-balance simulator for estimating how air conditioning changes street-canyon and city-air temperatures during a week-long heat event.
