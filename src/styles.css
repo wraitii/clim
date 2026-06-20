@@ -1,6 +1,20 @@
 :root {
-  color: #18201c;
-  background: #f4f1ea;
+  color: var(--text);
+  background: var(--page);
+  --page: #f4f1ea;
+  --panel: #fffdfa;
+  --text: #18201c;
+  --muted: #314138;
+  --soft: #52655b;
+  --faint: #62756b;
+  --border: rgb(24 32 28 / 12%);
+  --hero-border: rgb(24 32 28 / 14%);
+  --hero-overlay-a: rgb(244 241 234 / 92%);
+  --hero-overlay-b: rgb(244 241 234 / 76%);
+  --grid: rgb(24 32 28 / 12%);
+  --accent: #157f76;
+  --button-bg: rgb(255 253 250 / 78%);
+  --button-hover: #ffffff;
   font-family:
     Inter,
     ui-sans-serif,
@@ -11,6 +25,23 @@
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+[data-theme="dark"] {
+  --page: #101512;
+  --panel: #18201c;
+  --text: #f4f1ea;
+  --muted: #d7ded8;
+  --soft: #b2c0b7;
+  --faint: #a7b4ad;
+  --border: rgb(244 241 234 / 14%);
+  --hero-border: rgb(244 241 234 / 16%);
+  --hero-overlay-a: rgb(16 21 18 / 88%);
+  --hero-overlay-b: rgb(16 21 18 / 70%);
+  --grid: rgb(244 241 234 / 14%);
+  --accent: #39bfb4;
+  --button-bg: rgb(24 32 28 / 82%);
+  --button-hover: #202b25;
 }
 
 * {
@@ -34,16 +65,42 @@ input {
 .hero {
   padding: 40px clamp(18px, 4vw, 56px) 26px;
   background:
-    linear-gradient(90deg, rgb(244 241 234 / 92%), rgb(244 241 234 / 76%)),
+    linear-gradient(90deg, var(--hero-overlay-a), var(--hero-overlay-b)),
     url("https://images.unsplash.com/photo-1520939817895-060bdaf4fe1b?auto=format&fit=crop&w=1800&q=80");
   background-position: center 42%;
   background-size: cover;
-  border-bottom: 1px solid rgb(24 32 28 / 14%);
+  border-bottom: 1px solid var(--hero-border);
+}
+
+.topbar {
+  display: flex;
+  position: fixed;
+  z-index: 10;
+  top: 14px;
+  right: clamp(14px, 3vw, 32px);
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.toggleButton {
+  min-width: 64px;
+  min-height: 36px;
+  padding: 0 13px;
+  color: var(--text);
+  font-weight: 800;
+  background: var(--button-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.toggleButton:hover {
+  background: var(--button-hover);
 }
 
 .eyebrow {
   margin: 0 0 12px;
-  color: #556d60;
+  color: var(--soft);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -66,13 +123,13 @@ h1 {
 .lede {
   max-width: 900px;
   margin-bottom: 0;
-  color: #314138;
+  color: var(--muted);
   font-size: clamp(1rem, 1.4vw, 1.25rem);
   line-height: 1.5;
 }
 
 .metric span {
-  color: #52655b;
+  color: var(--soft);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -83,7 +140,7 @@ h1 {
 .control small,
 .chartHeader p,
 .notes p {
-  color: #62756b;
+  color: var(--faint);
   line-height: 1.42;
 }
 
@@ -110,8 +167,8 @@ h1 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px 14px;
   padding: 12px;
-  background: #fffdfa;
-  border: 1px solid rgb(24 32 28 / 12%);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -122,14 +179,14 @@ h1 {
 }
 
 .control output {
-  color: #25352c;
+  color: var(--muted);
   font-weight: 800;
 }
 
 .control input {
   grid-column: 1 / -1;
   width: 100%;
-  accent-color: #157f76;
+  accent-color: var(--accent);
 }
 
 .results {
@@ -140,8 +197,8 @@ h1 {
 .chartPanel,
 .notes {
   padding: 18px;
-  background: #fffdfa;
-  border: 1px solid rgb(24 32 28 / 12%);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -174,7 +231,7 @@ h1 {
   gap: 12px;
   align-content: start;
   justify-content: end;
-  color: #42534a;
+  color: var(--muted);
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -291,11 +348,11 @@ svg {
 }
 
 .chartBg {
-  fill: #fffdfa;
+  fill: var(--panel);
 }
 
 .grid {
-  stroke: rgb(24 32 28 / 12%);
+  stroke: var(--grid);
   stroke-width: 1;
 }
 
@@ -305,7 +362,7 @@ svg {
 
 .axisText,
 .axisLabel {
-  fill: #617269;
+  fill: var(--faint);
   font-size: 13px;
   font-weight: 700;
 }
@@ -413,13 +470,13 @@ svg {
   gap: 8px;
   min-height: 142px;
   padding: 14px;
-  background: #fffdfa;
-  border: 1px solid rgb(24 32 28 / 12%);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
 .metric strong {
-  color: #18201c;
+  color: var(--text);
   font-size: clamp(1.45rem, 2.1vw, 2rem);
   line-height: 1;
 }
@@ -442,7 +499,7 @@ svg {
 
 @media (max-width: 680px) {
   .hero {
-    padding-top: 28px;
+    padding-top: 76px;
   }
 
   .controls,
