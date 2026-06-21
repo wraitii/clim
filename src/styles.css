@@ -553,16 +553,36 @@ svg {
 }
 
 /* Node families, solid fills only: air masses, fabric surfaces, conditioned indoor. */
-.sch-air {
-  fill: rgb(111 155 209 / 15%);
+.sch-city-air {
+  fill: rgb(96 142 196 / 22%);
 }
 
-.sch-fabric {
-  fill: rgb(143 93 47 / 24%);
+.sch-country-air {
+  fill: rgb(113 168 218 / 18%);
+}
+
+.sch-canyon-air {
+  fill: rgb(143 190 224 / 30%);
+}
+
+.sch-roof {
+  fill: rgb(136 91 50 / 34%);
+}
+
+.sch-wall-sun {
+  fill: rgb(211 151 45 / 38%);
+}
+
+.sch-wall-shade {
+  fill: rgb(73 90 111 / 34%);
+}
+
+.sch-street {
+  fill: rgb(92 88 82 / 40%);
 }
 
 .sch-indoor {
-  fill: rgb(21 127 118 / 17%);
+  fill: rgb(21 127 118 / 24%);
 }
 
 .sch-node {
@@ -577,11 +597,24 @@ svg {
   font-size: 12.5px;
 }
 
+.sch-flow-label {
+  fill: var(--soft);
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+.sch-sun {
+  fill: #f0b429;
+  stroke: #f0b429;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
 /* Highlighted, non-obvious flows. */
 .fWin,
 .fAc {
   fill: none;
-  stroke-width: 3.5;
+  stroke-width: 2.3;
   stroke-linecap: round;
 }
 
@@ -594,24 +627,12 @@ svg {
   stroke: #8059b5;
 }
 
-/* Subtle background exchange between the two air masses. */
-.fExch {
-  fill: none;
-  stroke: var(--faint);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-}
-
 .fillWin {
   fill: #3a9d5d;
 }
 
 .fillAc {
   fill: #8059b5;
-}
-
-.fillExch {
-  fill: var(--faint);
 }
 
 .line.solarRoof {

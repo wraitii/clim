@@ -7,8 +7,10 @@ const translations: Record<string, string> = {
     "Interactive urban heat model": "Modèle interactif de chaleur urbaine",
     "How much does AC heat up cities?": "La climatisation réchauffe-t-elle les villes ?",
     "How the model works": "Comment fonctionne le modèle",
-    "A street-canyon energy balance. Surfaces trade solar, longwave, and convective heat with the canyon air, the indoor space, and the sky; AC adds its rejected heat to the canyon.":
-        "Un bilan énergétique de canyon urbain. Les surfaces échangent chaleur solaire, infrarouge et convective avec l’air du canyon, l’intérieur et le ciel ; la climatisation rejette en plus sa chaleur dans le canyon.",
+    D: "J",
+    End: "Fin",
+    "A simplified heat-network model. Roofs, walls, street, indoor air, canyon air, and city air are nodes with thermal capacity; solar, longwave, convective, and conductive links move energy between them, while AC rejects heat into the canyon. It is not a full urban climate model, but it is internally consistent for comparing scenarios.":
+        "Un modèle simplifié de réseau thermique. Toitures, murs, rue, air intérieur, air du canyon et air de la ville sont des nœuds avec capacité thermique ; des liens solaires, infrarouges, convectifs et conductifs transfèrent l’énergie entre eux, tandis que la climatisation rejette sa chaleur dans le canyon. Ce n’est pas un modèle complet de climat urbain, mais il reste cohérent pour comparer des scénarios.",
     "City air": "Air de la ville",
     "Countryside air": "Air de la campagne",
     "Canyon air": "Air du canyon",

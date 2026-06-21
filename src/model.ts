@@ -95,17 +95,17 @@ const defaults: Inputs = {
     indoorSolarFraction: 0.2,
     skyDepression: 12,
     internalGain: 4,
-    acDaySetpoint: 25,
-    acNightSetpoint: 22,
+    acDaySetpoint: 23,
+    acNightSetpoint: 23,
     acCapacity: 80,
     acCop: 3.5,
     acStart: 0,
     acEnd: 24,
-    dayVentilation: 80,
-    nightVentilation: 60,
+    dayVentilation: 60,
+    nightVentilation: 45,
 };
 
-const simulationHours = 24 * 7;
+const simulationHours = 24 * 7 + 8;
 const heatRampHours = 24 * 4;
 const dtHours = 1 / 60;
 const windowResponseHours = 0.5;
@@ -260,7 +260,7 @@ function floorAreaRatio(inputs: Inputs): number {
 }
 
 function canyonExchangeFactor(inputs: Inputs): number {
-    return 1 / canyonAspectRatio(inputs);
+    return 1 / Math.sqrt(canyonAspectRatio(inputs));
 }
 
 // Geometric sky-view factors for an infinitely long street canyon (r = H/W).

@@ -375,15 +375,6 @@ app.innerHTML = `
   <section class="workspace">
     <form class="controls" id="controls" aria-label="Simulation controls"></form>
     <section class="results">
-      <div class="chartPanel schematicPanel">
-        <div class="chartHeader">
-          <div>
-            <h2 data-i18n="How the model works">How the model works</h2>
-            <p data-i18n="A street-canyon energy balance. Surfaces trade solar, longwave, and convective heat with the canyon air, the indoor space, and the sky; AC adds its rejected heat to the canyon.">A street-canyon energy balance. Surfaces trade solar, longwave, and convective heat with the canyon air, the indoor space, and the sky; AC adds its rejected heat to the canyon.</p>
-          </div>
-        </div>
-        <div id="schematic"></div>
-      </div>
       <div class="chartPanel">
         <div class="chartHeader">
           <div>
@@ -393,6 +384,15 @@ app.innerHTML = `
           <div class="legend" id="tempLegend"></div>
         </div>
         <svg id="tempChart" viewBox="0 0 980 430" role="img" aria-label="Building and canyon temperature line chart"></svg>
+      </div>
+      <div class="chartPanel schematicPanel">
+        <div class="chartHeader">
+          <div>
+            <h2 data-i18n="How the model works">How the model works</h2>
+            <p data-i18n="A simplified heat-network model. Roofs, walls, street, indoor air, canyon air, and city air are nodes with thermal capacity; solar, longwave, convective, and conductive links move energy between them, while AC rejects heat into the canyon. It is not a full urban climate model, but it is internally consistent for comparing scenarios.">A simplified heat-network model. Roofs, walls, street, indoor air, canyon air, and city air are nodes with thermal capacity; solar, longwave, convective, and conductive links move energy between them, while AC rejects heat into the canyon. It is not a full urban climate model, but it is internally consistent for comparing scenarios.</p>
+          </div>
+        </div>
+        <div id="schematic"></div>
       </div>
       <div class="metricGrid" id="metrics"></div>
       <div class="chartPanel">
@@ -439,8 +439,42 @@ const fluxLegend = requiredElement<HTMLDivElement>("#fluxLegend");
 const schematicEl = requiredElement<HTMLDivElement>("#schematic");
 
 const presets: Array<{ label: string; values: Partial<Inputs> }> = [
-    { label: "Paris · solstice", values: { latitude: 48.85, dayOfYear: 172 } },
-    { label: "Paris · August", values: { latitude: 48.85, dayOfYear: 213 } },
+    {
+        label: "Paris · solstice",
+        values: {
+            latitude: 48.85,
+            dayOfYear: 172,
+            buildingCoverage: 0.55,
+            floorCount: 6,
+            dayVentilation: 60,
+            nightVentilation: 45,
+        },
+    },
+    {
+        label: "Paris · August",
+        values: {
+            latitude: 48.85,
+            dayOfYear: 213,
+            buildingCoverage: 0.55,
+            floorCount: 6,
+            dayVentilation: 60,
+            nightVentilation: 45,
+        },
+    },
+    {
+        label: "Hong Kong · high-rise",
+        values: {
+            latitude: 22.32,
+            dayOfYear: 172,
+            buildingCoverage: 0.58,
+            floorCount: 22,
+            dayVentilation: 60,
+            nightVentilation: 45,
+            cityAirDepth: 300,
+            clearSkyClarity: 0.68,
+            skyDepression: 7,
+        },
+    },
 ];
 
 const presetRow = document.createElement("div");
@@ -583,6 +617,16 @@ const hiddenFlux = new Set<string>(["solarRoof", "solarStreet", "solarWall", "so
 
 let lastPoints: Point[] = [];
 
+function formatDayTick(hour: number): string {
+    return `${t("D")}${Math.floor(hour / 24) + 1}`;
+}
+
+function formatEndTick(hour: number): string {
+    const localHour = Math.round(hour % 24);
+    if (localHour === 0) return t("End");
+    return `${t("End")} ${String(localHour).padStart(2, "0")}:00`;
+}
+
 function drawChart(
     svg: SVGSVGElement,
     legendEl: HTMLElement,
@@ -608,7 +652,8 @@ function drawChart(
     const xScale = (hour: number) => pad.left + ((hour - firstHour) / duration) * plotWidth;
     const yScale = (value: number) => pad.top + ((yMax - value) / (yMax - yMin)) * plotHeight;
     const grid = Array.from({ length: 6 }, (_, index) => yMin + ((yMax - yMin) * index) / 5);
-    const xTicks = Array.from({ length: 8 }, (_, index) => index * 24);
+    const dayTicks = Array.from({ length: Math.floor(lastHour / 24) + 1 }, (_, index) => index * 24);
+    const xTicks = dayTicks.at(-1) === lastHour ? dayTicks : [...dayTicks, lastHour];
 
     svg.innerHTML = `
     <rect class="chartBg" x="0" y="0" width="${width}" height="${height}" />
@@ -623,7 +668,7 @@ function drawChart(
         .map(
             (tick) => `
       <line class="grid vertical" x1="${xScale(tick)}" x2="${xScale(tick)}" y1="${pad.top}" y2="${height - pad.bottom}" />
-      <text class="axisText" x="${xScale(tick)}" y="${height - 16}" text-anchor="middle">${tick === simulationHours ? "End" : `D${Math.floor(tick / 24) + 1}`}</text>`,
+      <text class="axisText" x="${xScale(tick)}" y="${height - 16}" text-anchor="middle">${tick === lastHour ? formatEndTick(tick) : formatDayTick(tick)}</text>`,
         )
         .join("")}
     <text class="axisLabel" x="18" y="${height / 2}" transform="rotate(-90 18 ${height / 2})">${yLabel}</text>
