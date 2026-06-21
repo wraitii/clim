@@ -6,14 +6,21 @@ const languageNames: Record<Language, string> = { en: "English", fr: "Francais" 
 const translations: Record<string, string> = {
     "Interactive urban heat model": "Modèle interactif de chaleur urbaine",
     "How much does AC heat up cities?": "La climatisation réchauffe-t-elle les villes ?",
+    "How the model works": "Comment fonctionne le modèle",
+    "A street-canyon energy balance. Surfaces trade solar, longwave, and convective heat with the canyon air, the indoor space, and the sky; AC adds its rejected heat to the canyon.":
+        "Un bilan énergétique de canyon urbain. Les surfaces échangent chaleur solaire, infrarouge et convective avec l’air du canyon, l’intérieur et le ciel ; la climatisation rejette en plus sa chaleur dans le canyon.",
+    "City air": "Air de la ville",
+    "Countryside air": "Air de la campagne",
+    "Canyon air": "Air du canyon",
+    "Roof": "Toiture",
+    "Sunlit wall": "Mur ensoleillé",
+    "Shaded wall": "Mur à l’ombre",
+    "Street": "Rue",
+    "Indoor": "Intérieur",
+    "Windows": "Fenêtres",
     "Compare a no-AC city block with an air-conditioned block during a heat wave. The model tracks indoor comfort, waste heat, stored heat, and how much of it reaches the street canyon and city air.":
         "Comparez un îlot urbain sans climatisation à un îlot climatisé pendant une vague de chaleur. Quelques indicateurs sont suivis : confort intérieur, chaleur rejetée, chaleur stockée et quantité de chaleur atteignant le canyon urbain et l’air de la ville.",
-    "Indoor and canyon, with and without AC": "Intérieur et canyon urbain, avec et sans climatisation",
-    "The clean comparison: indoor air and street-canyon air for both scenarios.":
-        "La comparaison directe : air intérieur et air du canyon urbain dans les deux scénarios.",
     "Building and canyon temperatures": "Températures du bâtiment et du canyon urbain",
-    "Full week. Neutral air ramps to the end low/high over the first 4 days, then holds.":
-        "Semaine complète. L’air neutre évolue vers les minimums et maximums finaux pendant les 4 premiers jours, puis se stabilise.",
     "Click a legend entry to show or hide that line. Canyon, indoor, and neutral air are shown by default; surface temperatures can be toggled on.":
         "Cliquez sur une entrée de légende pour afficher ou masquer la courbe. Canyon, intérieur et air neutre sont affichés par défaut ; les températures de surface peuvent être activées.",
     "Heat released to street air": "Chaleur rejetée dans l’air de la rue",
@@ -25,8 +32,6 @@ const translations: Record<string, string> = {
     "This is an energy-balance sketch, not a full urban canopy model. Use it to compare directions and parameter sensitivity before moving to a coupled building-energy and urban-meteorology model.":
         "Il s’agit d’une esquisse de bilan énergétique, pas d’un modèle complet de canopée urbaine. Utilisez-la pour comparer les tendances et la sensibilité aux paramètres avant de passer à un modèle couplé bâtiment-énergie et météorologie urbaine.",
     "Simulation controls": "Réglages de simulation",
-    "Indoor and canyon temperature comparison line chart":
-        "Courbe comparant les températures intérieures et du canyon urbain",
     "Building and canyon temperature line chart": "Courbe des températures du bâtiment et du canyon urbain",
     "Heat flux line chart": "Courbe des flux de chaleur",
 

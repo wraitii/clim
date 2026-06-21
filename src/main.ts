@@ -2,6 +2,7 @@ import "./styles.css";
 
 import { type Inputs, type Point, defaults, simulationHours, simulate, summarize } from "./model";
 import { languageNames, t, formatNumber, getLanguage, setLanguage, initLanguage } from "./i18n";
+import { schematicMarkup } from "./schematic";
 
 type ThemeMode = "system" | "light" | "dark";
 
@@ -374,6 +375,15 @@ app.innerHTML = `
   <section class="workspace">
     <form class="controls" id="controls" aria-label="Simulation controls"></form>
     <section class="results">
+      <div class="chartPanel schematicPanel">
+        <div class="chartHeader">
+          <div>
+            <h2 data-i18n="How the model works">How the model works</h2>
+            <p data-i18n="A street-canyon energy balance. Surfaces trade solar, longwave, and convective heat with the canyon air, the indoor space, and the sky; AC adds its rejected heat to the canyon.">A street-canyon energy balance. Surfaces trade solar, longwave, and convective heat with the canyon air, the indoor space, and the sky; AC adds its rejected heat to the canyon.</p>
+          </div>
+        </div>
+        <div id="schematic"></div>
+      </div>
       <div class="chartPanel">
         <div class="chartHeader">
           <div>
@@ -426,6 +436,7 @@ const tempChart = requiredElement<SVGSVGElement>("#tempChart");
 const fluxChart = requiredElement<SVGSVGElement>("#fluxChart");
 const tempLegend = requiredElement<HTMLDivElement>("#tempLegend");
 const fluxLegend = requiredElement<HTMLDivElement>("#fluxLegend");
+const schematicEl = requiredElement<HTMLDivElement>("#schematic");
 
 const presets: Array<{ label: string; values: Partial<Inputs> }> = [
     { label: "Paris · solstice", values: { latitude: 48.85, dayOfYear: 172 } },
@@ -451,13 +462,7 @@ controlsEl.append(presetRow);
 
 // AC schedule and thermostat are the parameters most worth tweaking, so they lead; the
 // fabric/geometry/weather knobs are trickier to reason about and sit behind a disclosure.
-const primaryKeys: Array<keyof Inputs> = [
-    "acStart",
-    "acEnd",
-    "acDaySetpoint",
-    "acNightSetpoint",
-    "acCop",
-];
+const primaryKeys: Array<keyof Inputs> = ["acStart", "acEnd", "acDaySetpoint", "acNightSetpoint", "acCop"];
 
 function buildControlField(control: (typeof controls)[number]): HTMLLabelElement {
     const id = `control-${control.key}`;
@@ -926,6 +931,7 @@ function renderChrome() {
 }
 
 function render() {
+    schematicEl.innerHTML = schematicMarkup(state);
     renderChrome();
     renderControlValues();
     lastPoints = simulate(state);
