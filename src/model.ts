@@ -30,6 +30,7 @@ type Inputs = {
     acNightSetpoint: number;
     acCapacity: number;
     acCop: number;
+    acRemoteRejectionShare: number;
     acStart: number;
     acEnd: number;
     dayVentilation: number;
@@ -99,6 +100,7 @@ const defaults: Inputs = {
     acNightSetpoint: 23,
     acCapacity: 80,
     acCop: 3.5,
+    acRemoteRejectionShare: 0.05,
     acStart: 0,
     acEnd: 24,
     dayVentilation: 60,
@@ -417,9 +419,10 @@ function simulateScenario(inputs: Inputs, scenario: ScenarioName): Omit<Point, "
             waste = cooling * (1 + 1 / effectiveCop(inputs.acCop, canyonTemp));
         }
 
-        // AC condensers reject heat into the canyon air; the street fabric only warms
-        // indirectly, by convection from that warmed air.
-        const canyonFlux = passiveFlux + fabricFlux + windowHeatToCanyon + waste;
+        // Most AC rejection warms canyon air, but a configurable share can leave the
+        // modeled urban nodes, standing in for district cooling or remote rejection.
+        const canyonAcWaste = waste * (1 - inputs.acRemoteRejectionShare);
+        const canyonFlux = passiveFlux + fabricFlux + windowHeatToCanyon + canyonAcWaste;
         // All absorbed solar lands on the sunlit set; the shaded set only loses heat.
         const sunlitFlux = exteriorSolarGains - sunlitToCanyon - sunlitToIndoor - sunlitRadLoss;
         const shadedFlux = -shadedToCanyon - shadedToIndoor - shadedRadLoss;
@@ -564,7 +567,7 @@ function summarize(points: Point[], inputs: Inputs) {
     const cityAirTimeConstant = cityAirCapacity / inputs.cityAirExchange;
     const mixingRatio = inputs.dayVentilation / inputs.nightVentilation;
     const acCapacityLand = inputs.acCapacity * far;
-    const acMaxRejection = acCapacityLand * (1 + 1 / inputs.acCop);
+    const acMaxRejection = acCapacityLand * (1 + 1 / inputs.acCop) * (1 - inputs.acRemoteRejectionShare);
     const { road: roadSkyView, wall: wallSkyView, roof: roofSkyView } = skyViewFactors(inputs);
     const wallNetLongwave = longwaveCoefficient * wallSkyView * inputs.skyDepression;
     const roofNetLongwave = longwaveCoefficient * roofSkyView * inputs.skyDepression;

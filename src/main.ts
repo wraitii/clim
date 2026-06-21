@@ -286,6 +286,15 @@ const controls: Array<{
         help: "Coefficient of performance. Older or stressed systems may be 2-3; efficient systems often land around 4-6.",
     },
     {
+        key: "acRemoteRejectionShare",
+        label: "District cooling share",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: "%",
+        help: "Share of cooling served by a district network or remote rejection, so its heat leaves the local canyon instead of warming canyon air. 0% means local condensers; 100% means all AC rejection is outside the modeled street.",
+    },
+    {
         key: "acStart",
         label: "AC starts",
         min: 0,
@@ -505,7 +514,14 @@ controlsEl.append(shareButton);
 
 // AC schedule and thermostat are the parameters most worth tweaking, so they lead; the
 // fabric/geometry/weather knobs are trickier to reason about and sit behind a disclosure.
-const primaryKeys: Array<keyof Inputs> = ["acStart", "acEnd", "acDaySetpoint", "acNightSetpoint", "acCop"];
+const primaryKeys: Array<keyof Inputs> = [
+    "acStart",
+    "acEnd",
+    "acDaySetpoint",
+    "acNightSetpoint",
+    "acCop",
+    "acRemoteRejectionShare",
+];
 
 function buildControlField(control: (typeof controls)[number]): HTMLLabelElement {
     const id = `control-${control.key}`;
@@ -961,7 +977,8 @@ function renderControlValues() {
             output.textContent = `${state[control.key]}:00`;
             continue;
         }
-        output.textContent = `${formatNumber(Number(state[control.key]), control.step < 1 ? 2 : 0)}${control.unit}`;
+        const value = control.unit === "%" ? Number(state[control.key]) * 100 : Number(state[control.key]);
+        output.textContent = `${formatNumber(value, control.step < 1 && control.unit !== "%" ? 2 : 0)}${control.unit}`;
     }
 }
 

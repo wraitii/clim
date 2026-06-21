@@ -101,6 +101,7 @@ const translations: Record<string, string> = {
     "AC night setpoint": "Consigne de climatisation de nuit",
     "AC capacity": "Puissance de climatisation",
     "AC COP": "COP de la climatisation",
+    "District cooling share": "Part du réseau de froid",
     "AC starts": "Début de la climatisation",
     "AC ends": "Fin de la climatisation",
 
@@ -221,6 +222,8 @@ const translations: Record<string, string> = {
         "Plafond d’extraction de froid par m2 de plancher. À traiter comme capacité réellement appelée, pas comme puissance nominale. 20-40 modéré, 60-80 fort.",
     "Coefficient of performance. Older or stressed systems may be 2-3; efficient systems often land around 4-6.":
         "Coefficient de performance. Les systèmes anciens ou contraints peuvent être à 2-3 ; les systèmes efficaces se situent souvent autour de 4-6.",
+    "Share of cooling served by a district network or remote rejection, so its heat leaves the local canyon instead of warming canyon air. 0% means local condensers; 100% means all AC rejection is outside the modeled street.":
+        "Part du froid fournie par un réseau ou un rejet distant : la chaleur quitte alors le canyon local au lieu de réchauffer son air. 0 % signifie des condenseurs locaux ; 100 % signifie que tout le rejet de climatisation est hors de la rue modélisée.",
     "Hour when scheduled cooling begins. Use 0 with AC ends 24 for full-day operation.":
         "Heure de début de la climatisation programmée. Utilisez 0 avec une fin à 24 pour un fonctionnement toute la journée.",
     "Hour when scheduled cooling stops. Values earlier than start represent overnight schedules.":
