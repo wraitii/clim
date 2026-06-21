@@ -326,7 +326,7 @@ function applyTheme() {
     document.documentElement.style.colorScheme = effectiveTheme;
 }
 
-function updateUrlParams() {
+function relativeStateUrl(): string {
     const params = new URLSearchParams();
     if (getLanguage() !== "fr") params.set("lang", getLanguage());
     if (themeMode !== "system") params.set("theme", themeMode);
@@ -335,8 +335,11 @@ function updateUrlParams() {
         if (value !== defaults[control.key]) params.set(control.key, String(value));
     }
     const query = params.toString();
-    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
-    window.history.replaceState(null, "", nextUrl);
+    return `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+}
+
+function updateUrlParams() {
+    window.history.replaceState(null, "", relativeStateUrl());
 }
 
 function readStateFromUrl() {
@@ -486,6 +489,7 @@ for (const preset of presets) {
     button.dataset.preset = preset.label;
     button.textContent = preset.label;
     button.addEventListener("click", () => {
+        Object.assign(state, defaults);
         Object.assign(state, preset.values);
         updateUrlParams();
         render();
@@ -493,6 +497,11 @@ for (const preset of presets) {
     presetRow.append(button);
 }
 controlsEl.append(presetRow);
+const shareButton = document.createElement("button");
+shareButton.type = "button";
+shareButton.className = "shareButton";
+shareButton.textContent = t("Share");
+controlsEl.append(shareButton);
 
 // AC schedule and thermostat are the parameters most worth tweaking, so they lead; the
 // fabric/geometry/weather knobs are trickier to reason about and sit behind a disclosure.
@@ -552,6 +561,16 @@ languageToggle.addEventListener("click", () => {
     setLanguage(getLanguage() === "en" ? "fr" : "en");
     updateUrlParams();
     render();
+});
+
+shareButton.addEventListener("click", async () => {
+    updateUrlParams();
+    const url = relativeStateUrl();
+    await navigator.clipboard.writeText(url);
+    shareButton.textContent = t("Copied");
+    window.setTimeout(() => {
+        shareButton.textContent = t("Share");
+    }, 1400);
 });
 
 themeToggle.addEventListener("click", () => {
@@ -969,6 +988,9 @@ function renderChrome() {
     languageToggle.textContent = getLanguage() === "en" ? "FR" : "EN";
     languageToggle.ariaLabel = `${t("Language")}: ${languageNames[getLanguage()]}`;
     languageToggle.title = `${t("Language")}: ${languageNames[getLanguage()]}`;
+    shareButton.textContent = t("Share");
+    shareButton.ariaLabel = t("Share");
+    shareButton.title = t("Share");
     const effectiveTheme = themeMode === "system" ? (systemDarkQuery.matches ? "dark" : "light") : themeMode;
     themeToggle.textContent = t(effectiveTheme === "dark" ? "Light" : "Dark");
     themeToggle.ariaLabel = t(effectiveTheme === "dark" ? "Use light mode" : "Use dark mode");

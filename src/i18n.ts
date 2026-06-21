@@ -9,6 +9,8 @@ const translations: Record<string, string> = {
     "How the model works": "Comment fonctionne le modèle",
     D: "J",
     End: "Fin",
+    Share: "Partager",
+    Copied: "Copié",
     "A simplified heat-network model. Roofs, walls, street, indoor air, canyon air, and city air are nodes with thermal capacity; solar, longwave, convective, and conductive links move energy between them, while AC rejects heat into the canyon. It is not a full urban climate model, but it is internally consistent for comparing scenarios.":
         "Un modèle simplifié de réseau thermique. Toitures, murs, rue, air intérieur, air du canyon et air de la ville sont des nœuds avec capacité thermique ; des liens solaires, infrarouges, convectifs et conductifs transfèrent l’énergie entre eux, tandis que la climatisation rejette sa chaleur dans le canyon. Ce n’est pas un modèle complet de climat urbain, mais il reste cohérent pour comparer des scénarios.",
     "City air": "Air de la ville",
