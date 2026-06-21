@@ -20,8 +20,9 @@ type Inputs = {
     cityAirExchange: number;
     roofThermalMass: number;
     roofConductance: number;
-    peakSolar: number;
-    wallSunAngle: number;
+    latitude: number;
+    dayOfYear: number;
+    clearSkyClarity: number;
     indoorSolarFraction: number;
     skyDepression: number;
     internalGain: number;
@@ -59,6 +60,10 @@ type Point = {
     dayAcWaste: number;
     noAcFabricFlux: number;
     dayAcFabricFlux: number;
+    solarRoof: number;
+    solarStreet: number;
+    solarWall: number;
+    solarIndoor: number;
 };
 const neighborhoodPitchWidth = 24;
 const floorHeight = 3;
@@ -84,8 +89,9 @@ const defaults: Inputs = {
     cityAirExchange: 80,
     roofThermalMass: 80,
     roofConductance: 15,
-    peakSolar: 700,
-    wallSunAngle: 45,
+    latitude: 48.85,
+    dayOfYear: 172,
+    clearSkyClarity: 0.75,
     indoorSolarFraction: 0.2,
     skyDepression: 12,
     internalGain: 4,
@@ -123,29 +129,89 @@ const maxGradientConductanceMultiplier = 1.8;
 const copRatedCondenser = 35;
 const copDerate = 0.025;
 const copMin = 1.2;
-function dailyTemperature(hour: number, low: number, high: number): number {
-    const local = hour % 24;
-    const mean = (low + high) / 2;
-    const amplitude = (high - low) / 2;
-    const daily = Math.sin(((local - 9) / 24) * Math.PI * 2);
-    return mean + amplitude * daily;
+// Solar geometry. Intensity and the roof/wall/street split are derived from latitude and
+// day-of-year via the live solar elevation, instead of a fixed budget at a frozen angle.
+const solarConstant = 1361; // W/m2 extraterrestrial normal irradiance
+const groundAbsorptance = 0.8; // 1 - albedo: folds reflection into the absorbed budget
+// Diurnal air temperature (Parton-Logan): a sine rise to a peak lagged past solar noon,
+// then exponential decay through the night to the sunrise minimum. Tied to the same
+// sunrise/sunset the solar model derives, so the curve tracks day length and season.
+const peakTempLagHours = 1.5; // Tmax lags solar noon
+const nightDecayCoefficient = 2.2; // nocturnal cooling rate
+// Solar declination for the day of year (Cooper), in radians.
+function solarDeclination(inputs: Inputs): number {
+    return ((23.45 * Math.PI) / 180) * Math.sin((2 * Math.PI * (284 + inputs.dayOfYear)) / 365);
+}
+
+// sin(solar elevation); negative when the sun is below the horizon. Clock time is treated
+// as local solar time (no longitude/equation-of-time correction at this fidelity).
+function solarElevationSin(hour: number, inputs: Inputs): number {
+    const local = ((hour % 24) + 24) % 24;
+    const hourAngle = ((local - 12) * 15 * Math.PI) / 180;
+    const lat = (inputs.latitude * Math.PI) / 180;
+    const dec = solarDeclination(inputs);
+    return Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(hourAngle);
+}
+
+// Half-day-length in degrees of hour angle; sunrise/sunset are solar noon -/+ this.
+function daylightHalfAngleDeg(inputs: Inputs): number {
+    const lat = (inputs.latitude * Math.PI) / 180;
+    const dec = solarDeclination(inputs);
+    const cosH0 = -Math.tan(lat) * Math.tan(dec);
+    if (cosH0 <= -1) return 180; // polar day
+    if (cosH0 >= 1) return 0; // polar night
+    return (Math.acos(cosH0) * 180) / Math.PI;
+}
+
+function sunriseHour(inputs: Inputs): number {
+    return 12 - daylightHalfAngleDeg(inputs) / 15;
+}
+
+function sunsetHour(inputs: Inputs): number {
+    return 12 + daylightHalfAngleDeg(inputs) / 15;
+}
+
+// Clear-sky shortwave on a horizontal surface (W/m2), before albedo. Beam only: a simple
+// Kasten-Young air mass with a bulk atmospheric transmittance (the clarity knob).
+function clearSkyHorizontal(hour: number, inputs: Inputs): number {
+    const sinh = solarElevationSin(hour, inputs);
+    if (sinh <= 0) return 0;
+    const elevDeg = (Math.asin(Math.min(1, sinh)) * 180) / Math.PI;
+    const airMass = 1 / (sinh + 0.50572 * Math.pow(elevDeg + 6.07995, -1.6364));
+    const eccentricity = 1 + 0.033 * Math.cos((2 * Math.PI * inputs.dayOfYear) / 365);
+    const dni = solarConstant * eccentricity * Math.pow(inputs.clearSkyClarity, airMass);
+    return dni * sinh;
+}
+
+// Asymmetric diurnal air temperature (Parton-Logan), driven by the derived sunrise/sunset.
+function dailyTemperature(hour: number, low: number, high: number, inputs: Inputs): number {
+    const local = ((hour % 24) + 24) % 24;
+    const rise = sunriseHour(inputs);
+    const set = sunsetHour(inputs);
+    const dayLength = Math.max(0.001, set - rise);
+    const denom = dayLength + 2 * peakTempLagHours;
+    const sunsetTemp = low + (high - low) * Math.sin((Math.PI * dayLength) / denom);
+    if (local > rise && local < set) {
+        return low + (high - low) * Math.sin((Math.PI * (local - rise)) / denom);
+    }
+    const nightLength = Math.max(0.001, 24 - dayLength);
+    let sinceSunset = local - set;
+    if (sinceSunset < 0) sinceSunset += 24;
+    const b = nightDecayCoefficient;
+    // Normalized so T = sunsetTemp at sunset and T = low at the next sunrise.
+    const decay = (Math.exp((-b * sinceSunset) / nightLength) - Math.exp(-b)) / (1 - Math.exp(-b));
+    return low + (sunsetTemp - low) * decay;
 }
 
 function weatherTemp(hour: number, inputs: Inputs): number {
     const progress = Math.min(1, hour / heatRampHours);
     const low = inputs.startLow + (inputs.endLow - inputs.startLow) * progress;
     const high = inputs.startHigh + (inputs.endHigh - inputs.startHigh) * progress;
-    return dailyTemperature(hour, low, high);
-}
-
-function sunShape(hour: number): number {
-    const local = hour % 24;
-    if (local < 6 || local > 20) return 0;
-    return Math.sin(((local - 6) / 14) * Math.PI);
+    return dailyTemperature(hour, low, high, inputs);
 }
 
 function acSetpointForHour(hour: number, inputs: Inputs): number {
-    return sunShape(hour) > 0 ? inputs.acDaySetpoint : inputs.acNightSetpoint;
+    return solarElevationSin(hour, inputs) > 0 ? inputs.acDaySetpoint : inputs.acNightSetpoint;
 }
 
 // Effective COP at the current condenser (canyon) air temperature, derated linearly from
@@ -156,7 +222,8 @@ function effectiveCop(ratedCop: number, condenserTemp: number): number {
 }
 
 function canyonCityConductance(hour: number, inputs: Inputs): number {
-    const sun = sunShape(hour);
+    const noon = Math.max(0.001, solarElevationSin(12, inputs));
+    const sun = Math.min(1, Math.max(0, solarElevationSin(hour, inputs)) / noon);
     const smoothSun = sun * sun * (3 - 2 * sun);
     return inputs.nightVentilation + (inputs.dayVentilation - inputs.nightVentilation) * smoothSun;
 }
@@ -205,25 +272,33 @@ function skyViewFactors(inputs: Inputs): { road: number; wall: number; roof: num
     return { road, wall, roof: 1 };
 }
 
-function sunAngleComponents(inputs: Inputs): { horizontal: number; vertical: number } {
-    const angleRadians = (inputs.wallSunAngle * Math.PI) / 180;
+// Beam projection onto horizontal (roof/street) and vertical (wall) surfaces, from the
+// live solar elevation: horizontal ~ sin(elevation), vertical ~ cos(elevation).
+function sunComponents(sinElevation: number): { horizontal: number; vertical: number } {
+    const s = Math.min(1, Math.max(0, sinElevation));
     return {
-        horizontal: Math.max(0.01, Math.sin(angleRadians)),
-        vertical: Math.max(0.01, Math.cos(angleRadians)),
+        horizontal: Math.max(0.01, s),
+        vertical: Math.max(0.01, Math.sqrt(1 - s * s)),
     };
 }
 
-function solarSplit(inputs: Inputs): { roof: number; street: number; wallExterior: number; indoor: number } {
+// Absorbed shortwave per m2 land at `hour`, split across roof, street, exterior wall, and
+// indoor. Both the magnitude (clear-sky horizontal) and the partition (via the live
+// elevation) vary through the day, so low morning/evening sun favours walls and high noon
+// sun favours roof and street.
+function solarSplit(hour: number, inputs: Inputs): { roof: number; street: number; wallExterior: number; indoor: number } {
+    const budget = clearSkyHorizontal(hour, inputs) * groundAbsorptance;
+    if (budget <= 0) return { roof: 0, street: 0, wallExterior: 0, indoor: 0 };
     const { road: roadSkyView } = skyViewFactors(inputs);
-    const { horizontal, vertical } = sunAngleComponents(inputs);
+    const { horizontal, vertical } = sunComponents(solarElevationSin(hour, inputs));
     const roofWeight = inputs.buildingCoverage * horizontal;
     const canyonOpeningWeight = 1 - inputs.buildingCoverage;
     const streetWeight = canyonOpeningWeight * roadSkyView * horizontal;
     const wallWeight = canyonOpeningWeight * (1 - roadSkyView) * vertical;
     const totalWeight = Math.max(minAreaIndex, roofWeight + streetWeight + wallWeight);
-    const roof = inputs.peakSolar * (roofWeight / totalWeight);
-    const street = inputs.peakSolar * (streetWeight / totalWeight);
-    const wallIncident = inputs.peakSolar * (wallWeight / totalWeight);
+    const roof = budget * (roofWeight / totalWeight);
+    const street = budget * (streetWeight / totalWeight);
+    const wallIncident = budget * (wallWeight / totalWeight);
     const indoor = wallIncident * inputs.indoorSolarFraction;
     const wallExterior = wallIncident - indoor;
     return {
@@ -234,8 +309,10 @@ function solarSplit(inputs: Inputs): { roof: number; street: number; wallExterio
     };
 }
 
+// Frozen at solar noon: the sunlit/shaded wall areas set the lumped wall capacities, which
+// cannot migrate between nodes mid-run, even though the incident solar above varies hourly.
 function sunlitWallFraction(inputs: Inputs): number {
-    const { horizontal, vertical } = sunAngleComponents(inputs);
+    const { horizontal, vertical } = sunComponents(solarElevationSin(12, inputs));
     const sunlitHeightFraction = Math.min(1, horizontal / (vertical * canyonAspectRatio(inputs)));
     return 0.5 * sunlitHeightFraction;
 }
@@ -277,7 +354,6 @@ function simulateScenario(inputs: Inputs, scenario: ScenarioName): Omit<Point, "
     const roofCityConductance = inputs.roofConductance * roofAreaIndex;
     const roofIndoorConductance = inputs.roofEnvelopeConductance * roofAreaIndex;
     const roofRadConductance = longwaveCoefficient * roofAreaIndex * roofSkyView;
-    const peakSolarSplit = solarSplit(inputs);
     let indoorTemp = (inputs.startLow + inputs.startHigh) / 2;
     let facadeSunlitTemp = weatherTemp(0, inputs) + 0.7;
     let facadeShadedTemp = facadeSunlitTemp;
@@ -319,11 +395,11 @@ function simulateScenario(inputs: Inputs, scenario: ScenarioName): Omit<Point, "
         const windowHeatToIndoor =
             windowOpening * inputs.openWindowConductance * far * Math.min(0, canyonTemp - indoorTemp);
         const windowHeatToCanyon = -windowHeatToIndoor;
-        const sun = sunShape(hour);
-        const indoorSolarGains = peakSolarSplit.indoor * sun;
-        const exteriorSolarGains = peakSolarSplit.wallExterior * sun;
-        const streetSolarGains = peakSolarSplit.street * sun;
-        const roofSolarGains = peakSolarSplit.roof * sun;
+        const solar = solarSplit(hour, inputs);
+        const indoorSolarGains = solar.indoor;
+        const exteriorSolarGains = solar.wallExterior;
+        const streetSolarGains = solar.street;
+        const roofSolarGains = solar.roof;
         const skyTemp = weather - inputs.skyDepression;
         const sunlitRadLoss = sunlitRadConductance * (facadeSunlitTemp - skyTemp);
         const shadedRadLoss = shadedRadConductance * (facadeShadedTemp - skyTemp);
@@ -382,6 +458,11 @@ function simulateScenario(inputs: Inputs, scenario: ScenarioName): Omit<Point, "
             dayAcWaste: waste,
             noAcFabricFlux: scenario === "noAc" ? fabricFlux : 0,
             dayAcFabricFlux: scenario === "dayAc" ? fabricFlux : 0,
+            // Incident solar is scenario-independent; reported for both runs.
+            solarRoof: roofSolarGains,
+            solarStreet: streetSolarGains,
+            solarWall: exteriorSolarGains,
+            solarIndoor: indoorSolarGains,
         };
     };
 
@@ -422,6 +503,10 @@ function simulate(inputs: Inputs): Point[] {
             dayAcWaste: dayAc[index].dayAcWaste,
             noAcFabricFlux: row.noAcFabricFlux,
             dayAcFabricFlux: dayAc[index].dayAcFabricFlux,
+            solarRoof: row.solarRoof,
+            solarStreet: row.solarStreet,
+            solarWall: row.solarWall,
+            solarIndoor: row.solarIndoor,
         };
     });
 }
@@ -484,7 +569,7 @@ function summarize(points: Point[], inputs: Inputs) {
     const wallNetLongwave = longwaveCoefficient * wallSkyView * inputs.skyDepression;
     const roofNetLongwave = longwaveCoefficient * roofSkyView * inputs.skyDepression;
     const streetNetLongwave = longwaveCoefficient * roadSkyView * inputs.skyDepression;
-    const peakSolarSplit = solarSplit(inputs);
+    const peakSolarSplit = solarSplit(12, inputs);
     const splitSolarTotal =
         peakSolarSplit.roof + peakSolarSplit.street + peakSolarSplit.wallExterior + peakSolarSplit.indoor;
     const sunlitWallShare = sunlitWallFraction(inputs);

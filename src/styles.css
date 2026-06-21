@@ -98,6 +98,64 @@ input {
   background: var(--button-hover);
 }
 
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.presetButton {
+  padding: 6px 11px;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--button-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.presetButton:hover {
+  background: var(--button-hover);
+  border-color: var(--accent);
+}
+
+.advancedSection {
+  display: grid;
+  gap: 12px;
+}
+
+.advancedSection[hidden] {
+  display: none;
+}
+
+.advancedToggle {
+  padding: 9px 13px;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: left;
+  background: var(--button-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.advancedToggle::before {
+  content: "▸ ";
+  color: var(--accent);
+}
+
+.advancedToggle[aria-expanded="true"]::before {
+  content: "▾ ";
+}
+
+.advancedToggle:hover {
+  background: var(--button-hover);
+  border-color: var(--accent);
+}
+
 .eyebrow {
   margin: 0 0 12px;
   color: var(--soft);
@@ -266,6 +324,35 @@ h1 {
 
 .legend .waste {
   background: #8059b5;
+}
+
+.legend .solarRoof {
+  background: #c9a227;
+}
+
+.legend .solarStreet {
+  background: #e0951f;
+}
+
+.legend .solarWall {
+  background: #a9871f;
+}
+
+.legend .solarIndoor {
+  background: #f2cd5c;
+}
+
+.legendItem {
+  cursor: pointer;
+  user-select: none;
+}
+
+.legendItem:hover {
+  color: var(--text);
+}
+
+.legendItem.off {
+  opacity: 0.33;
 }
 
 .legend .noAcMass {
@@ -457,6 +544,29 @@ svg {
 .line.waste {
   stroke: #8059b5;
   stroke-dasharray: 7 8;
+}
+
+.line.solarRoof {
+  stroke: #c9a227;
+  stroke-width: 3;
+}
+
+.line.solarStreet {
+  stroke: #e0951f;
+  stroke-dasharray: 9 8;
+  stroke-width: 3;
+}
+
+.line.solarWall {
+  stroke: #a9871f;
+  stroke-dasharray: 2 8;
+  stroke-width: 3;
+}
+
+.line.solarIndoor {
+  stroke: #f2cd5c;
+  stroke-dasharray: 14 6 3 6;
+  stroke-width: 3;
 }
 
 .metricGrid {

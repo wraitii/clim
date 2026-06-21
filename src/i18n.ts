@@ -14,9 +14,11 @@ const translations: Record<string, string> = {
     "Building and canyon temperatures": "Températures du bâtiment et du canyon urbain",
     "Full week. Neutral air ramps to the end low/high over the first 4 days, then holds.":
         "Semaine complète. L’air neutre évolue vers les minimums et maximums finaux pendant les 4 premiers jours, puis se stabilise.",
+    "Click a legend entry to show or hide that line. Canyon, indoor, and neutral air are shown by default; surface temperatures can be toggled on.":
+        "Cliquez sur une entrée de légende pour afficher ou masquer la courbe. Canyon, intérieur et air neutre sont affichés par défaut ; les températures de surface peuvent être activées.",
     "Heat released to street air": "Chaleur rejetée dans l’air de la rue",
-    "Positive values warm the canyon. AC rejection includes extracted indoor heat plus compressor energy.":
-        "Les valeurs positives réchauffent le canyon urbain. Le rejet de climatisation inclut la chaleur extraite de l’intérieur et l’énergie du compresseur.",
+    "Positive values warm the canyon. AC rejection includes extracted indoor heat plus compressor energy. Incident solar can be toggled on.":
+        "Les valeurs positives réchauffent le canyon urbain. Le rejet de climatisation inclut la chaleur extraite de l’intérieur et l’énergie du compresseur. Le solaire incident peut être activé.",
     "What drives the warming?": "Qu’est-ce qui provoque le réchauffement ?",
     "The city impact depends on when AC runs, how efficiently it rejects heat, how strongly the canyon mixes, and whether cooled buildings avoid storing heat that would otherwise be released later.":
         "L’impact urbain dépend des horaires de fonctionnement de la climatisation, de l’efficacité du rejet de chaleur, du brassage dans le canyon urbain et du fait que les bâtiments refroidis stockent moins de chaleur qui aurait autrement été relâchée plus tard.",
@@ -46,6 +48,10 @@ const translations: Record<string, string> = {
     "AC facade": "Façade avec climatisation",
     "AC windows": "Fenêtres avec climatisation",
     "AC rejection": "Rejet de climatisation",
+    "Solar roof": "Solaire toiture",
+    "Solar street": "Solaire rue",
+    "Solar wall": "Solaire mur",
+    "Solar indoor": "Solaire intérieur",
 
     Language: "Langue",
     Theme: "Thème",
@@ -58,8 +64,11 @@ const translations: Record<string, string> = {
     "Start high": "Maximum initial",
     "End low": "Minimum final",
     "End high": "Maximum final",
-    "Peak solar": "Pic solaire",
-    "Wall sun angle": "Angle solaire sur façade",
+    "Advanced parameters": "Paramètres avancés",
+    "Hide advanced parameters": "Masquer les paramètres avancés",
+    "Latitude": "Latitude",
+    "Day of year": "Jour de l'année",
+    "Sky clarity": "Clarté du ciel",
     "Clear-sky depression": "Écart par ciel clair",
     "Building coverage": "Emprise bâtie",
     "Floor count": "Nombre d’étages",
@@ -151,10 +160,12 @@ const translations: Record<string, string> = {
         "Minimum météorologique neutre au jour 7. Augmentez cette valeur pour modéliser une chaleur régionale accumulée et un faible rafraîchissement nocturne.",
     "Neutral weather peak by day 7. Paris-scale heat waves can push the neutral peak toward 35-40 C.":
         "Pic météorologique neutre au jour 7. Des vagues de chaleur de type parisien peuvent pousser ce pic vers 35-40 C.",
-    "Fixed absorbed shortwave budget per m2 land at solar noon. 500-800 is a useful clear-summer range after albedo and geometry simplifications.":
-        "Budget fixe de rayonnement court absorbé par m2 de sol au midi solaire. 500-800 est une plage utile pour un été dégagé après simplification de l’albédo et de la géométrie.",
-    "Solar altitude for splitting fixed sun between horizontal roof/street and vertical walls. Low values favor walls; high values favor roofs and streets.":
-        "Altitude solaire utilisée pour répartir l’ensoleillement entre toiture/rue horizontales et murs verticaux. Les valeurs basses favorisent les murs ; les valeurs hautes favorisent toitures et rues.",
+    "Site latitude. Sets the sun's seasonal path: solar elevation, day length, and sunrise/sunset. Paris is 48.85.":
+        "Latitude du site. Détermine la course saisonnière du soleil : élévation, durée du jour, lever/coucher. Paris est à 48,85.",
+    "Date as day-of-year. Summer solstice is ~172 (Jun 21); Aug 1 is ~213. Drives solar declination, so day length and noon sun height.":
+        "Date en jour de l’année. Le solstice d’été est ~172 (21 juin) ; le 1er août ~213. Pilote la déclinaison solaire, donc la durée du jour et la hauteur du soleil à midi.",
+    "Bulk atmospheric transmittance for clear-sky beam solar. ~0.75 is a clear summer day; lower is hazier/more humid. Replaces the old fixed solar budget.":
+        "Transmittance atmosphérique globale du rayonnement direct par ciel clair. ~0,75 correspond à une journée d’été dégagée ; plus bas = plus brumeux/humide. Remplace l’ancien budget solaire fixe.",
     "Effective sky temperature below neutral air. 4-8 K suits humid/cloudy nights; 10-15 K suits clearer dry nights.":
         "Température effective du ciel sous l’air neutre. 4-8 K convient aux nuits humides ou nuageuses ; 10-15 K aux nuits plus claires et sèches.",
     "Share of land occupied by roofs/building footprint. Paris-like dense blocks with courtyards are roughly 0.45-0.65 in this simplified pitch model; 0.9 is near-solid fabric.":

@@ -51,22 +51,31 @@ const controls: Array<{
         help: "Neutral weather peak by day 7. Paris-scale heat waves can push the neutral peak toward 35-40 C.",
     },
     {
-        key: "peakSolar",
-        label: "Peak solar",
+        key: "latitude",
+        label: "Latitude",
         min: 0,
-        max: 1000,
-        step: 25,
-        unit: "W/m2",
-        help: "Fixed absorbed shortwave budget per m2 land at solar noon. 500-800 is a useful clear-summer range after albedo and geometry simplifications.",
+        max: 65,
+        step: 0.05,
+        unit: "deg N",
+        help: "Site latitude. Sets the sun's seasonal path: solar elevation, day length, and sunrise/sunset. Paris is 48.85.",
     },
     {
-        key: "wallSunAngle",
-        label: "Wall sun angle",
-        min: 5,
-        max: 85,
+        key: "dayOfYear",
+        label: "Day of year",
+        min: 1,
+        max: 365,
         step: 1,
-        unit: "deg",
-        help: "Solar altitude for splitting fixed sun between horizontal roof/street and vertical walls. Low values favor walls; high values favor roofs and streets.",
+        unit: "",
+        help: "Date as day-of-year. Summer solstice is ~172 (Jun 21); Aug 1 is ~213. Drives solar declination, so day length and noon sun height.",
+    },
+    {
+        key: "clearSkyClarity",
+        label: "Sky clarity",
+        min: 0.5,
+        max: 0.82,
+        step: 0.01,
+        unit: "",
+        help: "Bulk atmospheric transmittance for clear-sky beam solar. ~0.75 is a clear summer day; lower is hazier/more humid. Replaces the old fixed solar budget.",
     },
     {
         key: "skyDepression",
@@ -368,39 +377,10 @@ app.innerHTML = `
       <div class="chartPanel">
         <div class="chartHeader">
           <div>
-            <h2 data-i18n="Indoor and canyon, with and without AC">Indoor and canyon, with and without AC</h2>
-            <p data-i18n="The clean comparison: indoor air and street-canyon air for both scenarios.">The clean comparison: indoor air and street-canyon air for both scenarios.</p>
-          </div>
-          <div class="legend">
-            <span><i class="noAc"></i><span data-i18n="No AC canyon">No AC canyon</span></span>
-            <span><i class="dayAc"></i><span data-i18n="AC canyon">AC canyon</span></span>
-            <span><i class="noAcMass"></i><span data-i18n="No AC indoor">No AC indoor</span></span>
-            <span><i class="dayAcMass"></i><span data-i18n="AC indoor">AC indoor</span></span>
-          </div>
-        </div>
-        <svg id="cleanChart" viewBox="0 0 980 360" role="img" aria-label="Indoor and canyon temperature comparison line chart"></svg>
-      </div>
-      <div class="chartPanel">
-        <div class="chartHeader">
-          <div>
             <h2 data-i18n="Building and canyon temperatures">Building and canyon temperatures</h2>
-            <p data-i18n="Full week. Neutral air ramps to the end low/high over the first 4 days, then holds.">Full week. Neutral air ramps to the end low/high over the first 4 days, then holds.</p>
+            <p data-i18n="Click a legend entry to show or hide that line. Canyon, indoor, and neutral air are shown by default; surface temperatures can be toggled on.">Click a legend entry to show or hide that line. Canyon, indoor, and neutral air are shown by default; surface temperatures can be toggled on.</p>
           </div>
-          <div class="legend">
-            <span><i class="noAc"></i><span data-i18n="No AC canyon">No AC canyon</span></span>
-            <span><i class="noAcCityAir"></i><span data-i18n="No AC city air">No AC city air</span></span>
-            <span><i class="noAcFacade"></i><span data-i18n="No AC facade (sun)">No AC facade (sun)</span></span>
-            <span><i class="noAcRoof"></i><span data-i18n="No AC roof">No AC roof</span></span>
-            <span><i class="noAcFabric"></i><span data-i18n="No AC street">No AC street</span></span>
-            <span><i class="noAcMass"></i><span data-i18n="No AC indoor">No AC indoor</span></span>
-            <span><i class="dayAc"></i><span data-i18n="AC canyon">AC canyon</span></span>
-            <span><i class="dayAcCityAir"></i><span data-i18n="AC city air">AC city air</span></span>
-            <span><i class="dayAcFacade"></i><span data-i18n="AC facade (sun)">AC facade (sun)</span></span>
-            <span><i class="dayAcRoof"></i><span data-i18n="AC roof">AC roof</span></span>
-            <span><i class="dayAcFabric"></i><span data-i18n="AC street">AC street</span></span>
-            <span><i class="dayAcMass"></i><span data-i18n="AC indoor">AC indoor</span></span>
-            <span><i class="weather"></i><span data-i18n="Neutral air">Neutral air</span></span>
-          </div>
+          <div class="legend" id="tempLegend"></div>
         </div>
         <svg id="tempChart" viewBox="0 0 980 430" role="img" aria-label="Building and canyon temperature line chart"></svg>
       </div>
@@ -409,17 +389,9 @@ app.innerHTML = `
         <div class="chartHeader">
           <div>
             <h2 data-i18n="Heat released to street air">Heat released to street air</h2>
-            <p data-i18n="Positive values warm the canyon. AC rejection includes extracted indoor heat plus compressor energy.">Positive values warm the canyon. AC rejection includes extracted indoor heat plus compressor energy.</p>
+            <p data-i18n="Positive values warm the canyon. AC rejection includes extracted indoor heat plus compressor energy. Incident solar can be toggled on.">Positive values warm the canyon. AC rejection includes extracted indoor heat plus compressor energy. Incident solar can be toggled on.</p>
           </div>
-          <div class="legend">
-            <span><i class="noAc"></i><span data-i18n="No AC facade">No AC facade</span></span>
-            <span><i class="noAcFabric"></i><span data-i18n="No AC street">No AC street</span></span>
-            <span><i class="noAcWindow"></i><span data-i18n="No AC windows">No AC windows</span></span>
-            <span><i class="dayAc"></i><span data-i18n="AC facade">AC facade</span></span>
-            <span><i class="dayAcFabric"></i><span data-i18n="AC street">AC street</span></span>
-            <span><i class="dayAcWindow"></i><span data-i18n="AC windows">AC windows</span></span>
-            <span><i class="waste"></i><span data-i18n="AC rejection">AC rejection</span></span>
-          </div>
+          <div class="legend" id="fluxLegend"></div>
         </div>
         <svg id="fluxChart" viewBox="0 0 980 300" role="img" aria-label="Heat flux line chart"></svg>
       </div>
@@ -450,11 +422,44 @@ const controlsEl = requiredElement<HTMLFormElement>("#controls");
 const metricsEl = requiredElement<HTMLElement>("#metrics");
 const languageToggle = requiredElement<HTMLButtonElement>("#languageToggle");
 const themeToggle = requiredElement<HTMLButtonElement>("#themeToggle");
-const cleanChart = requiredElement<SVGSVGElement>("#cleanChart");
 const tempChart = requiredElement<SVGSVGElement>("#tempChart");
 const fluxChart = requiredElement<SVGSVGElement>("#fluxChart");
+const tempLegend = requiredElement<HTMLDivElement>("#tempLegend");
+const fluxLegend = requiredElement<HTMLDivElement>("#fluxLegend");
 
-for (const control of controls) {
+const presets: Array<{ label: string; values: Partial<Inputs> }> = [
+    { label: "Paris · solstice", values: { latitude: 48.85, dayOfYear: 172 } },
+    { label: "Paris · August", values: { latitude: 48.85, dayOfYear: 213 } },
+];
+
+const presetRow = document.createElement("div");
+presetRow.className = "presets";
+for (const preset of presets) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "presetButton";
+    button.dataset.preset = preset.label;
+    button.textContent = preset.label;
+    button.addEventListener("click", () => {
+        Object.assign(state, preset.values);
+        updateUrlParams();
+        render();
+    });
+    presetRow.append(button);
+}
+controlsEl.append(presetRow);
+
+// AC schedule and thermostat are the parameters most worth tweaking, so they lead; the
+// fabric/geometry/weather knobs are trickier to reason about and sit behind a disclosure.
+const primaryKeys: Array<keyof Inputs> = [
+    "acStart",
+    "acEnd",
+    "acDaySetpoint",
+    "acNightSetpoint",
+    "acCop",
+];
+
+function buildControlField(control: (typeof controls)[number]): HTMLLabelElement {
     const id = `control-${control.key}`;
     const field = document.createElement("label");
     field.className = "control";
@@ -473,8 +478,36 @@ for (const control of controls) {
         updateUrlParams();
         render();
     });
-    controlsEl.append(field);
+    return field;
 }
+
+const primaryControls = primaryKeys
+    .map((key) => controls.find((control) => control.key === key))
+    .filter((control): control is (typeof controls)[number] => control !== undefined);
+const advancedControls = controls.filter((control) => !primaryKeys.includes(control.key));
+
+for (const control of primaryControls) controlsEl.append(buildControlField(control));
+
+const advancedToggle = document.createElement("button");
+advancedToggle.type = "button";
+advancedToggle.className = "advancedToggle";
+advancedToggle.setAttribute("aria-expanded", "false");
+advancedToggle.textContent = t("Advanced parameters");
+
+const advancedSection = document.createElement("div");
+advancedSection.className = "advancedSection";
+advancedSection.hidden = true;
+for (const control of advancedControls) advancedSection.append(buildControlField(control));
+
+advancedToggle.addEventListener("click", () => {
+    const opening = advancedSection.hidden;
+    advancedSection.hidden = !opening;
+    advancedToggle.setAttribute("aria-expanded", String(opening));
+    advancedToggle.textContent = opening ? t("Hide advanced parameters") : t("Advanced parameters");
+});
+
+controlsEl.append(advancedToggle);
+controlsEl.append(advancedSection);
 
 languageToggle.addEventListener("click", () => {
     setLanguage(getLanguage() === "en" ? "fr" : "en");
@@ -497,10 +530,60 @@ systemDarkQuery.addEventListener("change", () => {
     renderChrome();
 });
 
-function renderLineChart(
+type ChartSeries = { key: keyof Point; className: string; label: string };
+
+// Temperature chart: canyon/indoor/neutral shown by default, surfaces toggled on.
+const tempSeries: ChartSeries[] = [
+    { key: "noAcOutdoor", className: "noAc", label: "No AC canyon" },
+    { key: "dayAcOutdoor", className: "dayAc", label: "AC canyon" },
+    { key: "noAcMass", className: "noAcMass", label: "No AC indoor" },
+    { key: "dayAcMass", className: "dayAcMass", label: "AC indoor" },
+    { key: "weather", className: "weather", label: "Neutral air" },
+    { key: "noAcCityAir", className: "noAcCityAir", label: "No AC city air" },
+    { key: "dayAcCityAir", className: "dayAcCityAir", label: "AC city air" },
+    { key: "noAcFacade", className: "noAcFacade", label: "No AC facade (sun)" },
+    { key: "dayAcFacade", className: "dayAcFacade", label: "AC facade (sun)" },
+    { key: "noAcRoof", className: "noAcRoof", label: "No AC roof" },
+    { key: "dayAcRoof", className: "dayAcRoof", label: "AC roof" },
+    { key: "noAcFabric", className: "noAcFabric", label: "No AC street" },
+    { key: "dayAcFabric", className: "dayAcFabric", label: "AC street" },
+];
+const hiddenTemp = new Set<string>([
+    "weather",
+    "noAcCityAir",
+    "dayAcCityAir",
+    "noAcFacade",
+    "dayAcFacade",
+    "noAcRoof",
+    "dayAcRoof",
+    "noAcFabric",
+    "dayAcFabric",
+]);
+
+// Flux chart: heat released to the canyon, plus incident solar (off by default).
+const fluxSeries: ChartSeries[] = [
+    { key: "noAcFlux", className: "noAc", label: "No AC facade" },
+    { key: "noAcFabricFlux", className: "noAcFabric", label: "No AC street" },
+    { key: "noAcWindowFlux", className: "noAcWindow", label: "No AC windows" },
+    { key: "dayAcFlux", className: "dayAc", label: "AC facade" },
+    { key: "dayAcFabricFlux", className: "dayAcFabric", label: "AC street" },
+    { key: "dayAcWindowFlux", className: "dayAcWindow", label: "AC windows" },
+    { key: "dayAcWaste", className: "waste", label: "AC rejection" },
+    { key: "solarRoof", className: "solarRoof", label: "Solar roof" },
+    { key: "solarStreet", className: "solarStreet", label: "Solar street" },
+    { key: "solarWall", className: "solarWall", label: "Solar wall" },
+    { key: "solarIndoor", className: "solarIndoor", label: "Solar indoor" },
+];
+const hiddenFlux = new Set<string>(["solarRoof", "solarStreet", "solarWall", "solarIndoor"]);
+
+let lastPoints: Point[] = [];
+
+function drawChart(
     svg: SVGSVGElement,
+    legendEl: HTMLElement,
     points: Point[],
-    series: Array<{ key: keyof Point; className: string }>,
+    series: ChartSeries[],
+    hidden: Set<string>,
     yLabel: string,
 ) {
     const width = 980;
@@ -511,7 +594,10 @@ function renderLineChart(
     const firstHour = points[0]?.hour ?? 0;
     const lastHour = points.at(-1)?.hour ?? simulationHours;
     const duration = Math.max(1, lastHour - firstHour);
-    const yValues = series.flatMap((item) => points.map((point) => Number(point[item.key])));
+    const visible = series.filter((item) => !hidden.has(item.key as string));
+    // Scale to the visible lines so hiding a hot surface zooms back in; fall back to all.
+    const scaleSeries = visible.length > 0 ? visible : series;
+    const yValues = scaleSeries.flatMap((item) => points.map((point) => Number(point[item.key])));
     const yMin = Math.floor(Math.min(...yValues) - 1);
     const yMax = Math.ceil(Math.max(...yValues) + 1);
     const xScale = (hour: number) => pad.left + ((hour - firstHour) / duration) * plotWidth;
@@ -536,7 +622,7 @@ function renderLineChart(
         )
         .join("")}
     <text class="axisLabel" x="18" y="${height / 2}" transform="rotate(-90 18 ${height / 2})">${yLabel}</text>
-    ${series
+    ${visible
         .map((item) => {
             const d = points
                 .map((point, index) => {
@@ -548,7 +634,33 @@ function renderLineChart(
         })
         .join("")}
   `;
+
+    legendEl.innerHTML = series
+        .map((item) => {
+            const off = hidden.has(item.key as string) ? " off" : "";
+            return `<span class="legendItem${off}" data-key="${item.key}" role="button" tabindex="0"><i class="${item.className}"></i><span>${t(item.label)}</span></span>`;
+        })
+        .join("");
 }
+
+function drawCharts() {
+    drawChart(tempChart, tempLegend, lastPoints, tempSeries, hiddenTemp, "C");
+    drawChart(fluxChart, fluxLegend, lastPoints, fluxSeries, hiddenFlux, "W/m2");
+}
+
+function wireLegend(legendEl: HTMLElement, hidden: Set<string>) {
+    legendEl.addEventListener("click", (event) => {
+        const target = (event.target as HTMLElement).closest<HTMLElement>("[data-key]");
+        const key = target?.dataset.key;
+        if (!key) return;
+        if (hidden.has(key)) hidden.delete(key);
+        else hidden.add(key);
+        drawCharts();
+    });
+}
+
+wireLegend(tempLegend, hiddenTemp);
+wireLegend(fluxLegend, hiddenFlux);
 
 function renderMetrics(summary: ReturnType<typeof summarize>) {
     const signedValue = (value: number, digits = 2) => `${value >= 0 ? "+" : ""}${formatNumber(value, digits)} C`;
@@ -788,7 +900,6 @@ function renderChrome() {
     document.documentElement.lang = getLanguage();
     document.title = t("How much does AC heat up cities?");
     controlsEl.ariaLabel = t("Simulation controls");
-    cleanChart.setAttribute("aria-label", t("Indoor and canyon temperature comparison line chart"));
     tempChart.setAttribute("aria-label", t("Building and canyon temperature line chart"));
     fluxChart.setAttribute("aria-label", t("Heat flux line chart"));
     document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((element) => {
@@ -801,6 +912,10 @@ function renderChrome() {
         if (label) label.textContent = t(control.label);
         if (help) help.textContent = t(control.help);
     }
+    advancedToggle.textContent =
+        advancedToggle.getAttribute("aria-expanded") === "true"
+            ? t("Hide advanced parameters")
+            : t("Advanced parameters");
     languageToggle.textContent = getLanguage() === "en" ? "FR" : "EN";
     languageToggle.ariaLabel = `${t("Language")}: ${languageNames[getLanguage()]}`;
     languageToggle.title = `${t("Language")}: ${languageNames[getLanguage()]}`;
@@ -813,54 +928,9 @@ function renderChrome() {
 function render() {
     renderChrome();
     renderControlValues();
-    const points = simulate(state);
-    const summary = summarize(points, state);
-    renderMetrics(summary);
-    renderLineChart(
-        cleanChart,
-        points,
-        [
-            { key: "noAcOutdoor", className: "noAc" },
-            { key: "dayAcOutdoor", className: "dayAc" },
-            { key: "noAcMass", className: "noAcMass" },
-            { key: "dayAcMass", className: "dayAcMass" },
-        ],
-        "C",
-    );
-    renderLineChart(
-        tempChart,
-        points,
-        [
-            { key: "noAcOutdoor", className: "noAc" },
-            { key: "noAcCityAir", className: "noAcCityAir" },
-            { key: "noAcFacade", className: "noAcFacade" },
-            { key: "noAcRoof", className: "noAcRoof" },
-            { key: "noAcFabric", className: "noAcFabric" },
-            { key: "noAcMass", className: "noAcMass" },
-            { key: "dayAcOutdoor", className: "dayAc" },
-            { key: "dayAcCityAir", className: "dayAcCityAir" },
-            { key: "dayAcFacade", className: "dayAcFacade" },
-            { key: "dayAcRoof", className: "dayAcRoof" },
-            { key: "dayAcFabric", className: "dayAcFabric" },
-            { key: "dayAcMass", className: "dayAcMass" },
-            { key: "weather", className: "weather" },
-        ],
-        "C",
-    );
-    renderLineChart(
-        fluxChart,
-        points,
-        [
-            { key: "noAcFlux", className: "noAc" },
-            { key: "noAcFabricFlux", className: "noAcFabric" },
-            { key: "noAcWindowFlux", className: "noAcWindow" },
-            { key: "dayAcFlux", className: "dayAc" },
-            { key: "dayAcFabricFlux", className: "dayAcFabric" },
-            { key: "dayAcWindowFlux", className: "dayAcWindow" },
-            { key: "dayAcWaste", className: "waste" },
-        ],
-        "W/m2",
-    );
+    lastPoints = simulate(state);
+    renderMetrics(summarize(lastPoints, state));
+    drawCharts();
 }
 
 applyTheme();
